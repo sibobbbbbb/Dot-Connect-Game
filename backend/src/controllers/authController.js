@@ -24,10 +24,11 @@ exports.loginUser = async (req, res) => {
 
   try {
     let user = await User.findOne({ username });
-    if (!user || user.password !== password) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }else if (password !== user.password) {
+      return res.status(400).json({ message: "Invalid password" });
     }
-
     res.json({ message: "Login successful", userId: user.id });
   } catch (err) {
     console.error(err.message);
