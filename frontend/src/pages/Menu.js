@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { MenuContext } from "../context/MenuContext";
@@ -6,11 +6,29 @@ import { MenuContext } from "../context/MenuContext";
 function Menu() {
   const { username } = useContext(AuthContext);
   const { mode, setMode, difficulty, setDifficulty } = useContext(MenuContext);
+  const [boardType, setBoardType] = useState("random"); // Tambahan untuk jenis board (random/custom)
+  const [jsonFile, setJsonFile] = useState(null); // Tambahan untuk menyimpan file JSON
   const navigate = useNavigate();
 
   const handleStartGame = () => {
-    console.log("Starting game with settings:", { username, mode, difficulty });
-    navigate("/game"); 
+    console.log("Starting game with settings:", { username, mode, difficulty, boardType, jsonFile });
+    
+    if (mode === "manual" && boardType === "custom" && !jsonFile) {
+      alert("Please upload a JSON file for custom board.");
+      return;
+    }
+
+    if (mode === "bot" && !jsonFile) {
+      alert("Please upload a JSON file for Bot mode.");
+      return;
+    }
+
+    navigate("/game", { state: { mode, difficulty, boardType, jsonFile } });
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    setJsonFile(file);
   };
 
   return (
@@ -33,19 +51,47 @@ function Menu() {
           </select>
         </div>
 
-        <div className="mb-6">
-          <label className="block text-gray-700 mb-2">Difficulty Level:</label>
-          <select
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="beginner">Beginner</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </div>
+        {mode === "manual" && (
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-2">Board Type:</label>
+            <select
+              value={boardType}
+              onChange={(e) => setBoardType(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="random">Random Board</option>
+              <option value="custom">Custom Board (JSON)</option>
+            </select>
+          </div>
+        )}
+
+        {(mode === "bot" || (mode === "manual" && boardType === "custom")) && (
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-2">Upload JSON File:</label>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleFileUpload}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        )}
+
+        {mode === "manual" && (
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-2">Difficulty Level:</label>
+            <select
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="beginner">Beginner</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        )}
 
         <button
           onClick={handleStartGame}
