@@ -101,8 +101,7 @@ const Game = () => {
           y1={y1}
           x2={x2}
           y2={y2}
-          // stroke="#1D4ED8"
-          stroke="blue"
+          stroke="#1D4ED8"
           strokeWidth="10"
           strokeLinecap="round" 
         />
