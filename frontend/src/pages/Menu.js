@@ -1,17 +1,20 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { MenuContext } from "../context/MenuContext";
 
 function Menu() {
   const { username } = useContext(AuthContext);
-  const { mode, setMode, difficulty, setDifficulty } = useContext(MenuContext);
-  const [boardType, setBoardType] = useState("random"); // Tambahan untuk jenis board (random/custom)
-  const [jsonFile, setJsonFile] = useState(null); // Tambahan untuk menyimpan file JSON
+  const { mode, setMode, difficulty, setDifficulty ,boardType, setBoardType,jsonFile, setJsonFile} = useContext(MenuContext);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!username) {
+      navigate('/');
+    }
+  }, [username, navigate]);
+
   const handleStartGame = () => {
-    console.log("Starting game with settings:", { username, mode, difficulty, boardType, jsonFile });
     
     if (mode === "manual" && boardType === "custom" && !jsonFile) {
       alert("Please upload a JSON file for custom board.");
@@ -23,13 +26,28 @@ function Menu() {
       return;
     }
 
-    navigate("/game", { state: { mode, difficulty, boardType, jsonFile } });
+    navigate("/game");
   };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
-    setJsonFile(file);
+    const reader = new FileReader();
+  
+    reader.onload = (event) => {
+      try {
+        const jsonContent = JSON.parse(event.target.result);
+        setJsonFile(jsonContent);
+      } catch (error) {
+        console.error("Invalid JSON file", error);
+        alert("The uploaded file is not a valid JSON.");
+      }
+    };
+  
+    if (file) {
+      reader.readAsText(file);
+    }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 text-white">
@@ -77,7 +95,7 @@ function Menu() {
           </div>
         )}
 
-        {mode === "manual" && (
+        {mode === "manual" && boardType == "random" && (
           <div className="mb-6">
             <label className="block text-gray-700 mb-2">Difficulty Level:</label>
             <select

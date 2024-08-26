@@ -11,15 +11,55 @@ const Game = () => {
   const [startDot, setStartDot] = useState(null);
   const [currentPath, setCurrentPath] = useState([]);
   const { username } = useContext(AuthContext);
-  const { mode, difficulty } = useContext(MenuContext);
+  const { mode, difficulty, jsonFile } = useContext(MenuContext);
+  const [stopwatch, setStopwatch] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [dotToWin, setDotToWin] = useState(0);
+  const [isWinner, setIsWinner] = useState(false);
+  const [winningTime, setWinningTime] = useState(0);
+
+  const countZero = (matrix) => {
+    let count = 0;
+    for (let i = 0; i < matrix.length; i++) {
+      for (let j = 0; j < matrix[i].length; j++) {
+        if (matrix[i][j] === 0) {
+          count++;
+        }
+      }
+    }
+    setDotToWin(count);
+  };
 
   useEffect(() => {
     if (!username) {
-      navigate('/');
+      navigate("/");
     }
-    const initialBoard = generateBoard(difficulty);
+    var initialBoard = jsonFile ? jsonFile.board : generateBoard(difficulty);
     setBoard(initialBoard);
-  }, [difficulty, username, navigate]);
+    countZero(initialBoard);
+    setIsRunning(true);
+  }, [jsonFile, difficulty, username, navigate]);
+
+  useEffect(() => {
+    let interval;
+    if (isRunning) {
+      interval = setInterval(() => {
+        setStopwatch((prevTime) => prevTime + 1);
+      }, 1000);
+    } else if (!isRunning && stopwatch !== 0) {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, stopwatch]);
+
+  useEffect(() => {
+    if (dotToWin !== 0 && currentPath.length - 1 === dotToWin) {
+      setTimeout(() => {
+        setIsWinner(true);
+        setWinningTime(stopwatch);
+      }, 100);
+    }
+  }, [currentPath, dotToWin]);
 
   const isValidMove = (rowIndex, colIndex) => {
     const [lastRow, lastCol] = currentPath[currentPath.length - 1];
@@ -84,7 +124,7 @@ const Game = () => {
     return currentPath.map(([startRow, startCol], index) => {
       if (index === currentPath.length - 1) return null;
       const [endRow, endCol] = currentPath[index + 1];
-  
+
       // Penyesuaian posisi koordinat untuk menggambar garis
       const dotSize = 70; // Ukuran dot
       const gapSize = 15; // Jarak antar dot
@@ -93,7 +133,7 @@ const Game = () => {
       const y1 = startRow * (dotSize + gapSize) + dotOffset;
       const x2 = endCol * (dotSize + gapSize) + dotOffset;
       const y2 = endRow * (dotSize + gapSize) + dotOffset;
-  
+
       return (
         <line
           key={`${startRow}-${startCol}-${endRow}-${endCol}`}
@@ -103,16 +143,16 @@ const Game = () => {
           y2={y2}
           stroke="#1D4ED8"
           strokeWidth="10"
-          strokeLinecap="round" 
+          strokeLinecap="round"
         />
       );
     });
   };
-  
+
   const renderBoard = () => {
     const dotSize = 70; // Ukuran dot
     const gapSize = 10; // Jarak antar dot
-  
+
     return (
       <div className="flex justify-center">
         {board.length > 0 && (
@@ -168,19 +208,41 @@ const Game = () => {
       </div>
     );
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-green-400 to-blue-500 text-white">
       <h1 className="text-4xl font-bold mb-8">Dot Connect</h1>
-      <div className="bg-white p-6 rounded-lg shadow-lg text-gray-800">
-        {renderBoard()}
-      </div>
-      <button
-        onClick={() => navigate("/menu")}
-        className="mt-8 bg-red-500 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300"
-      >
-        Back to Menu
-      </button>
+      {!isWinner && (
+        <>
+          <div className="flex items-center gap-4">
+            <p className="text-lg">Time: {stopwatch} seconds</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-lg text-gray-800">
+            {renderBoard()}
+          </div>
+          <button
+            onClick={() => navigate("/menu")}
+            className="mt-8 bg-red-500 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300"
+          >
+            Back to Menu
+          </button>
+        </>
+      )}
+      {isWinner && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-4 text-black">Congratulations!</h2>
+            <p className="mb-4 text-black">You have connected all the dots!</p>
+            <p className="mb-8 text-black">Time taken: {winningTime} seconds</p>
+            <button
+              onClick={() => navigate("/menu")}
+              className="bg-blue-500 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300"
+            >
+              Back to Menu
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
