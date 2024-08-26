@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { MenuContext } from "../context/MenuContext";
 import { AuthContext } from "../context/AuthContext";
 import generateBoard from "../logic/generateBoard";
+import solveDotConnect from "../logic/botSolver";
 
 const Game = () => {
   const navigate = useNavigate();
@@ -17,6 +18,19 @@ const Game = () => {
   const [dotToWin, setDotToWin] = useState(0);
   const [isWinner, setIsWinner] = useState(false);
   const [winningTime, setWinningTime] = useState(0);
+  const [isBotRunning, setIsBotRunning] = useState(false); // Apakah bot sedang berjalan
+  const [botIndex, setBotIndex] = useState(0); // Index path bot saat ini
+
+  const findStartDot = (board) => {
+    for (let i = 0; i < board.length; i++) {
+      for (let j = 0; j < board[i].length; j++) {
+        if (board[i][j] === 2) {
+          return [i, j];
+        }
+      }
+    }
+    return null;
+  };
 
   const countZero = (matrix) => {
     let count = 0;
@@ -27,18 +41,61 @@ const Game = () => {
         }
       }
     }
-    setDotToWin(count);
+    return count;
   };
 
   useEffect(() => {
     if (!username) {
       navigate("/");
     }
-    var initialBoard = jsonFile ? jsonFile.board : generateBoard(difficulty);
+
+    var initialBoard =
+      mode === "bot" ? jsonFile.board : generateBoard(difficulty);
     setBoard(initialBoard);
-    countZero(initialBoard);
+    const count = countZero(initialBoard);
+    setDotToWin(count);
     setIsRunning(true);
-  }, [jsonFile, difficulty, username, navigate]);
+  }, [jsonFile, difficulty, username, navigate, mode]);
+
+  useEffect(() => {
+    if (mode === "bot" && isRunning) {
+      const startDot = findStartDot(board);
+      const startTime = performance.now();
+      const solutionPath = solveDotConnect(
+        board,
+        startDot[0],
+        startDot[1],
+        dotToWin
+      );
+      const endTime = performance.now();
+      const solvingTime = endTime - startTime;
+      setWinningTime(solvingTime / 1000);
+      setCurrentPath(solutionPath);
+      setIsBotRunning(true); // Mulai jalur bot
+    }
+  }, [mode, isRunning]);
+
+  useEffect(() => {
+    if (isBotRunning && currentPath.length > 0) {
+      const interval = setInterval(() => {
+        setBotIndex((prevIndex) => {
+          const nextIndex = prevIndex + 1;
+          if (nextIndex < currentPath.length) {
+            const [row, col] = currentPath[nextIndex];
+            updateBoard(row, col, 3);
+            return nextIndex;
+          } else {
+            // Bot selesai
+            clearInterval(interval);
+            setIsBotRunning(false);
+            setIsWinner(true);
+            return prevIndex;
+          }
+        });
+      }, 100); // Jeda antara langkah-langkah bot
+      return () => clearInterval(interval);
+    }
+  }, [currentPath, isBotRunning, stopwatch]);
 
   useEffect(() => {
     let interval;
@@ -53,7 +110,11 @@ const Game = () => {
   }, [isRunning, stopwatch]);
 
   useEffect(() => {
-    if (dotToWin !== 0 && currentPath.length - 1 === dotToWin) {
+    if (
+      mode === "manual" &&
+      dotToWin !== 0 &&
+      currentPath.length - 1 === dotToWin
+    ) {
       setTimeout(() => {
         setIsWinner(true);
         setWinningTime(stopwatch);
@@ -71,6 +132,7 @@ const Game = () => {
   };
 
   const handleMouseDown = (rowIndex, colIndex) => {
+    if (mode === "bot" || isBotRunning) return; // Cegah interaksi
     if (board[rowIndex][colIndex] === 2) {
       // start dari titik awal
       setStartDot([rowIndex, colIndex]);
@@ -96,6 +158,7 @@ const Game = () => {
   };
 
   const handleMouseEnter = (rowIndex, colIndex) => {
+    if (mode === "bot" || isBotRunning) return; // Cegah interaksi
     if (!startDot) return;
 
     // kalo user nya balik
@@ -121,32 +184,63 @@ const Game = () => {
   };
 
   const renderLines = () => {
-    return currentPath.map(([startRow, startCol], index) => {
-      if (index === currentPath.length - 1) return null;
-      const [endRow, endCol] = currentPath[index + 1];
+    if (mode === "bot") {
+      return currentPath
+        .slice(0, botIndex + 1)
+        .map(([startRow, startCol], index) => {
+          if (index === currentPath.length - 1) return null;
+          const [endRow, endCol] = currentPath[index + 1];
 
-      // Penyesuaian posisi koordinat untuk menggambar garis
-      const dotSize = 70; // Ukuran dot
-      const gapSize = 15; // Jarak antar dot
-      const dotOffset = dotSize / 2; // Setengah ukuran dot untuk mendapatkan titik tengah
-      const x1 = startCol * (dotSize + gapSize) + dotOffset;
-      const y1 = startRow * (dotSize + gapSize) + dotOffset;
-      const x2 = endCol * (dotSize + gapSize) + dotOffset;
-      const y2 = endRow * (dotSize + gapSize) + dotOffset;
+          // Penyesuaian posisi koordinat untuk menggambar garis
+          const dotSize = 70; // Ukuran dot
+          const gapSize = 15; // Jarak antar dot
+          const dotOffset = dotSize / 2; // Setengah ukuran dot untuk mendapatkan titik tengah
+          const x1 = startCol * (dotSize + gapSize) + dotOffset;
+          const y1 = startRow * (dotSize + gapSize) + dotOffset;
+          const x2 = endCol * (dotSize + gapSize) + dotOffset;
+          const y2 = endRow * (dotSize + gapSize) + dotOffset;
 
-      return (
-        <line
-          key={`${startRow}-${startCol}-${endRow}-${endCol}`}
-          x1={x1}
-          y1={y1}
-          x2={x2}
-          y2={y2}
-          stroke="#1D4ED8"
-          strokeWidth="10"
-          strokeLinecap="round"
-        />
-      );
-    });
+          return (
+            <line
+              key={`${startRow}-${startCol}-${endRow}-${endCol}`}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke="#1D4ED8"
+              strokeWidth="10"
+              strokeLinecap="round"
+            />
+          );
+        });
+    } else {
+      return currentPath.map(([startRow, startCol], index) => {
+        if (index === currentPath.length - 1) return null;
+        const [endRow, endCol] = currentPath[index + 1];
+
+        // Penyesuaian posisi koordinat untuk menggambar garis
+        const dotSize = 70; // Ukuran dot
+        const gapSize = 15; // Jarak antar dot
+        const dotOffset = dotSize / 2; // Setengah ukuran dot untuk mendapatkan titik tengah
+        const x1 = startCol * (dotSize + gapSize) + dotOffset;
+        const y1 = startRow * (dotSize + gapSize) + dotOffset;
+        const x2 = endCol * (dotSize + gapSize) + dotOffset;
+        const y2 = endRow * (dotSize + gapSize) + dotOffset;
+
+        return (
+          <line
+            key={`${startRow}-${startCol}-${endRow}-${endCol}`}
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
+            stroke="#1D4ED8"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+        );
+      });
+    }
   };
 
   const renderBoard = () => {
@@ -212,7 +306,7 @@ const Game = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-green-400 to-blue-500 text-white">
       <h1 className="text-4xl font-bold mb-8">Dot Connect</h1>
-      {!isWinner && (
+      {!isWinner && mode === "manual" && (
         <>
           <div className="flex items-center gap-4">
             <p className="text-lg">Time: {stopwatch} seconds</p>
@@ -228,10 +322,22 @@ const Game = () => {
           </button>
         </>
       )}
+      {!isWinner && mode === "bot" && (
+        <>
+          <div className="flex items-center gap-4">
+            <p className="text-lg">Bot is solving... Please wait.</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-lg text-gray-800">
+            {renderBoard()}
+          </div>
+        </>
+      )}
       {isWinner && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 shadow-lg text-center">
-            <h2 className="text-2xl font-bold mb-4 text-black">Congratulations!</h2>
+            <h2 className="text-2xl font-bold mb-4 text-black">
+              Congratulations!
+            </h2>
             <p className="mb-4 text-black">You have connected all the dots!</p>
             <p className="mb-8 text-black">Time taken: {winningTime} seconds</p>
             <button
