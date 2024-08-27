@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Leaderboard() {
   const [scores, setScores] = useState([]);
   const [level, setLevel] = useState("beginner");
   const [mode, setMode] = useState("manual");
+  const navigate = useNavigate(); // Untuk navigasi
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -21,7 +23,7 @@ function Leaderboard() {
         console.error("Error fetching leaderboard:", error);
       }
     };
-    if(mode === "bot") {
+    if (mode === "bot") {
       setLevel("beginner");
     }
     fetchLeaderboard();
@@ -29,7 +31,14 @@ function Leaderboard() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-      <div className="bg-white text-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full">
+      <div className="bg-white text-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full relative">
+        <button
+          onClick={() => navigate("/main-menu")}
+          className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded-lg shadow-md focus:outline-none"
+        >
+          Back
+        </button>
+
         <h2 className="text-3xl font-semibold text-center mb-6">Leaderboard</h2>
 
         <div className="mb-4 flex justify-between">
@@ -47,16 +56,19 @@ function Leaderboard() {
 
           <div>
             {mode !== "bot" && (
-            <><label className="block text-gray-700 mb-2">Level:</label><select
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="beginner">Beginner</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select></>
+              <>
+                <label className="block text-gray-700 mb-2">Level:</label>
+                <select
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="beginner">Beginner</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </>
             )}
           </div>
         </div>

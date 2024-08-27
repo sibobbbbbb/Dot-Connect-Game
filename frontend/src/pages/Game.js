@@ -73,6 +73,7 @@ const Game = () => {
       const endTime = performance.now();
       const solvingTime = endTime - startTime;
       setWinningTime(parseFloat((solvingTime / 1000).toFixed(5)));
+      console.log(parseFloat((solvingTime / 1000).toFixed(5)));
       setCurrentPath(solutionPath);
       setIsBotRunning(true); // Mulai jalur bot
     }
@@ -89,7 +90,8 @@ const Game = () => {
             return nextIndex;
           } else {
             // Bot selesai
-            // saveScore(username, winningTime, difficulty, mode);
+            console.log(winningTime);
+            saveScore(username, winningTime, "beginner", mode);
             clearInterval(interval);
             setIsBotRunning(false);
             setIsWinner(true);
@@ -121,7 +123,9 @@ const Game = () => {
     ) {
       setTimeout(() => {
         setIsWinner(true);
-        // saveScore(username, stopwatch, difficulty, mode);
+        if(boardType !== "custom"){
+          saveScore(username, stopwatch, difficulty, mode);
+        }
         setWinningTime(stopwatch);
       }, 100);
     }
@@ -309,7 +313,7 @@ const Game = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-green-400 to-blue-500 text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 text-white">
       <h1 className="text-4xl font-bold mb-8">Dot Connect</h1>
       {!isWinner && mode === "manual" && (
         <>
@@ -346,7 +350,7 @@ const Game = () => {
             <p className="mb-4 text-black">You have connected all the dots!</p>
             <p className="mb-8 text-black">Time taken: {winningTime} seconds</p>
             <button
-              onClick={() => navigate("/menu")}
+              onClick={() => navigate("/main-menu")}
               className="bg-blue-500 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300"
             >
               Back to Menu

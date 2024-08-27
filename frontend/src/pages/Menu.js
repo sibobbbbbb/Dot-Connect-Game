@@ -5,7 +5,7 @@ import { MenuContext } from "../context/MenuContext";
 
 function Menu() {
   const { username } = useContext(AuthContext);
-  const { mode, setMode, difficulty, setDifficulty ,boardType, setBoardType,jsonFile, setJsonFile} = useContext(MenuContext);
+  const { mode, setMode, difficulty, setDifficulty, boardType, setBoardType, jsonFile, setJsonFile } = useContext(MenuContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -13,7 +13,7 @@ function Menu() {
       navigate('/');
     }
 
-    if(jsonFile !== null) {
+    if (jsonFile !== null) {
       setJsonFile(null);
     }
   }, [username, navigate]);
@@ -35,7 +35,7 @@ function Menu() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();
-  
+
     reader.onload = (event) => {
       try {
         const jsonContent = JSON.parse(event.target.result);
@@ -45,16 +45,23 @@ function Menu() {
         alert("The uploaded file is not a valid JSON.");
       }
     };
-  
+
     if (file) {
       reader.readAsText(file);
     }
   };
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-      <div className="bg-white text-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full">
+      <div className="bg-white text-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full relative">
+
+        <button
+          onClick={() => navigate("/main-menu")}
+          className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded-lg shadow-md focus:outline-none"
+        >
+          Back
+        </button>
+
         <h2 className="text-3xl font-semibold text-center mb-4">
           Hello {username}!
         </h2>
@@ -98,7 +105,7 @@ function Menu() {
           </div>
         )}
 
-        {mode === "manual" && boardType == "random" && (
+        {mode === "manual" && boardType === "random" && (
           <div className="mb-6">
             <label className="block text-gray-700 mb-2">Difficulty Level:</label>
             <select

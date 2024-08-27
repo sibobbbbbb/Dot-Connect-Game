@@ -9,9 +9,18 @@ exports.saveScore = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
-    // Tambahkan skor ke array scores
-    user.scores.push({ time, level, mode });
+
+    // Cari skor terbaik saat ini untuk level dan mode yang sama
+    const currentBestScore = user.scores.find(score => score.level === level && score.mode === mode);
+
+    if (currentBestScore) {
+      if (time < currentBestScore.time) {
+        currentBestScore.time = time;
+      }
+    } else {
+      user.scores.push({ time, level, mode });
+    }
+
     await user.save();
 
     res.status(200).json({ message: "Score saved successfully" });
