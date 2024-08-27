@@ -22,7 +22,7 @@ function Login() {
     if (response.ok) {
       alert('Login successful');
       setGlobalUsername(username);
-      navigate('/menu'); 
+      navigate('/main-menu'); 
     } else {
       alert(data.message);
     }

@@ -1,7 +1,23 @@
 const mongoose = require('mongoose');
 
-// User Schema
-const UserSchema = new mongoose.Schema({
+const scoreSchema = new mongoose.Schema({
+  time: {
+    type: Number,
+    required: true,
+  },
+  level: {
+    type: String,
+    enum: ['beginner', 'easy', 'medium', 'hard'],
+    required: true,
+  },
+  mode: {
+    type: String,
+    enum: ['manual', 'bot'],
+    required: true,
+  },
+});
+
+const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
@@ -11,6 +27,9 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  scores: [scoreSchema], 
 });
 
-module.exports = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;

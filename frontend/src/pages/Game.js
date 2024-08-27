@@ -5,6 +5,7 @@ import { MenuContext } from "../context/MenuContext";
 import { AuthContext } from "../context/AuthContext";
 import generateBoard from "../logic/generateBoard";
 import solveDotConnect from "../logic/botSolver";
+import saveScore from "../logic/saveScore";
 
 const Game = () => {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ const Game = () => {
       );
       const endTime = performance.now();
       const solvingTime = endTime - startTime;
-      setWinningTime(solvingTime / 1000);
+      setWinningTime(parseFloat((solvingTime/1000).toFixed(5)));
       setCurrentPath(solutionPath);
       setIsBotRunning(true); // Mulai jalur bot
     }
@@ -86,6 +87,7 @@ const Game = () => {
             return nextIndex;
           } else {
             // Bot selesai
+            saveScore(username, winningTime, difficulty, mode);
             clearInterval(interval);
             setIsBotRunning(false);
             setIsWinner(true);
@@ -117,6 +119,7 @@ const Game = () => {
     ) {
       setTimeout(() => {
         setIsWinner(true);
+        saveScore(username, stopwatch, difficulty, mode);
         setWinningTime(stopwatch);
       }, 100);
     }

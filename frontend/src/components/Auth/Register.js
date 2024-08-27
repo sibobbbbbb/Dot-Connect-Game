@@ -22,7 +22,7 @@ function Register() {
     if (response.ok) {
       alert('User registered successfully');
       setGlobalUsername(username);
-      navigate('/menu'); 
+      navigate('/main-menu'); 
     } else {
       alert(data.message);
     }
