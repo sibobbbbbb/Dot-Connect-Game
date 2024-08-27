@@ -13,7 +13,7 @@ const Game = () => {
   const [startDot, setStartDot] = useState(null);
   const [currentPath, setCurrentPath] = useState([]);
   const { username } = useContext(AuthContext);
-  const { mode, difficulty, jsonFile } = useContext(MenuContext);
+  const { mode, difficulty, boardType, jsonFile } = useContext(MenuContext);
   const [stopwatch, setStopwatch] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [dotToWin, setDotToWin] = useState(0);
@@ -51,7 +51,9 @@ const Game = () => {
     }
 
     var initialBoard =
-      mode === "bot" ? jsonFile.board : generateBoard(difficulty);
+      boardType === "custom" || mode === "bot"
+        ? jsonFile.board
+        : generateBoard(difficulty);
     setBoard(initialBoard);
     const count = countZero(initialBoard);
     setDotToWin(count);
@@ -70,7 +72,7 @@ const Game = () => {
       );
       const endTime = performance.now();
       const solvingTime = endTime - startTime;
-      setWinningTime(parseFloat((solvingTime/1000).toFixed(5)));
+      setWinningTime(parseFloat((solvingTime / 1000).toFixed(5)));
       setCurrentPath(solutionPath);
       setIsBotRunning(true); // Mulai jalur bot
     }
@@ -87,7 +89,7 @@ const Game = () => {
             return nextIndex;
           } else {
             // Bot selesai
-            saveScore(username, winningTime, difficulty, mode);
+            // saveScore(username, winningTime, difficulty, mode);
             clearInterval(interval);
             setIsBotRunning(false);
             setIsWinner(true);
@@ -119,7 +121,7 @@ const Game = () => {
     ) {
       setTimeout(() => {
         setIsWinner(true);
-        saveScore(username, stopwatch, difficulty, mode);
+        // saveScore(username, stopwatch, difficulty, mode);
         setWinningTime(stopwatch);
       }, 100);
     }

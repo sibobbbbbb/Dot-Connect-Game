@@ -12,10 +12,13 @@ function Menu() {
     if (!username) {
       navigate('/');
     }
+
+    if(jsonFile !== null) {
+      setJsonFile(null);
+    }
   }, [username, navigate]);
 
   const handleStartGame = () => {
-    
     if (mode === "manual" && boardType === "custom" && !jsonFile) {
       alert("Please upload a JSON file for custom board.");
       return;
@@ -80,7 +83,7 @@ function Menu() {
               <option value="random">Random Board</option>
               <option value="custom">Custom Board (JSON)</option>
             </select>
-          </div>
+          </div> 
         )}
 
         {(mode === "bot" || (mode === "manual" && boardType === "custom")) && (
